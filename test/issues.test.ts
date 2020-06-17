@@ -1,6 +1,6 @@
 import { Repository, writeProjectData } from '../src';
 import { promises as fs } from 'fs';
-import { homedir} from 'os';
+import { homedir } from 'os';
 
 describe('fetchIssues', () => {
   it(
@@ -12,7 +12,9 @@ describe('fetchIssues', () => {
         owner: 'mui-org',
         name: 'material-ui-pickers',
       };
-      const accessToken = (await fs.readFile(homedir + "/githubToken.txt", "utf8")).trim();
+      const accessToken = (
+        await fs.readFile(homedir + '/githubToken.txt', 'utf8')
+      ).trim();
       await writeProjectData(repository, accessToken);
       done();
       // expect(sum(1, 1)).toEqual(2);

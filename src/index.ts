@@ -90,6 +90,19 @@ export const fetchIssues = async (
                 createdAt
                 updatedAt
                 title
+                body
+                comments(last: 100) {
+                  nodes {
+                    body
+                    createdAt
+                    url
+                  }
+                }
+                labels(last: 100) {
+                  nodes {
+                    name
+                  }
+                }
               }
               pageInfo {
                 startCursor
