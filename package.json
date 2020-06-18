@@ -41,7 +41,10 @@
   "dependencies": {
     "@octokit/auth-token": "^2.4.2",
     "@octokit/graphql": "^4.5.1",
-    "cli-ux": "^5.4.6"
+    "@types/lodash": "^4.14.155",
+    "cli-ux": "^5.4.6",
+    "filesize": "^6.1.0",
+    "lodash": "^4.17.15"
   },
   "jest": {
     "testEnvironment": "node"

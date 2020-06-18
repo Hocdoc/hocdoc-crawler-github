@@ -2,16 +2,25 @@ import { graphql } from '@octokit/graphql';
 import { RequestParameters } from '@octokit/graphql/dist-types/types';
 import cli from 'cli-ux';
 import { promises as fs } from 'fs';
+import { isString } from 'lodash';
+import filesize from 'filesize';
 
 export interface Repository {
   owner: string;
   name: string;
 }
 
+export interface Statistic {
+  issuesCount: number;
+  issuesSizeInBytes: number;
+  errorMessage?: string;
+}
+
 export const writeProjectData = async (
   repository: Repository,
   accessToken: string
-): Promise<void> => {
+): Promise<Statistic> => {
+  const startTimeMillis = Date.now();
   const headers = {
     owner: repository.owner,
     name: repository.name,
@@ -19,17 +28,32 @@ export const writeProjectData = async (
       authorization: accessToken,
     },
   };
+  const issues = await writeIssues(headers);
+  let result: Statistic = {
+    issuesCount: issues.issuesCount || 0,
+    issuesSizeInBytes: issues.issuesSizeInBytes || 0,
+    errorMessage: issues.errorMessage,
+  };
 
-  await writeIssues(headers);
-  //  writePullReqests(headers, repository);
+  const lastTime = Date.now() - startTimeMillis;
+  console.log(
+    `Fetched ${result.issuesCount} issues with ${filesize(
+      result.issuesSizeInBytes
+    )} in ${Math.round(lastTime / 1000)}s from https://github.com/${
+      repository.owner
+    }/${repository.name}`
+  );
+
+  return result;
 };
 
 export const writeIssues = async (
   headers: RequestParameters
-): Promise<void> => {
+): Promise<Partial<Statistic>> => {
   let hasPreviousPage = true;
   let startCursor = undefined;
   let issuesCount = 0;
+  let issuesSizeInBytes = 0;
 
   const progressBar = cli.progress({
     format: 'Fetching issues | {bar} | {value}/{total} new issues',
@@ -37,8 +61,16 @@ export const writeIssues = async (
 
   while (hasPreviousPage) {
     const response: any = await fetchIssues(headers, startCursor);
+    if (isString(response)) {
+      progressBar.stop();
+      return {
+        issuesCount,
+        issuesSizeInBytes,
+        errorMessage: response as string,
+      };
+    }
+
     const issues = (response?.nodes as any[]) || [];
-    console.log(`Issues ${issues.length}`);
     hasPreviousPage = response?.pageInfo?.hasPreviousPage;
     startCursor = response?.pageInfo?.startCursor;
 
@@ -46,24 +78,26 @@ export const writeIssues = async (
       progressBar.start(response.totalCount);
     }
 
+    const sizes = await Promise.all(issues.map(x => writeIssue(x)));
+    issuesSizeInBytes = sizes.reduce((x, y) => x + y, issuesSizeInBytes);
+
     issuesCount += issues.length;
     progressBar.increment(issues.length);
-
-    // console.log(`Issues: ${JSON.stringify(issues, undefined, 2)}`);
-    await Promise.all(issues.map(x => writeIssue(x)));
   }
 
   progressBar.stop();
-  console.log(`Fetched ${issuesCount} issues`);
+  return { issuesCount, issuesSizeInBytes };
 };
 
-const writeIssue = async (issue: any): Promise<void> => {
+/** @return size of the JSON issue in bytes */
+const writeIssue = async (issue: any): Promise<number> => {
   if (issue.id) {
-    console.log('Issue: ' + issue.title);
     const content = JSON.stringify(issue, undefined, 2);
     const path = '/tmp/' + issue.id + '.json';
     await fs.writeFile(path, content);
+    return content.length;
   }
+  return 0;
 };
 
 export const fetchIssues = async (
@@ -117,10 +151,14 @@ export const fetchIssues = async (
 
     return (result as any).repository.issues;
   } catch (error) {
-    console.log('Fehler: ' + error);
+    return graphqlErrorToMessage(error);
   }
 
   return {};
+};
+
+export const graphqlErrorToMessage = (error: any): string => {
+  return error.toString();
 };
 
 export const writePullRequests = (repository: Repository): void => {
