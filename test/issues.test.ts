@@ -1,6 +1,7 @@
-import { Repository, writeProjectData } from '../src';
+import { writeProjectData } from '../src';
 import { promises as fs } from 'fs';
 import { homedir } from 'os';
+import { Repository } from '../src/utils';
 
 describe('fetchIssues', () => {
   it(
