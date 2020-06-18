@@ -149,6 +149,11 @@ export const fetchIssues = async (
                 updatedAt
                 title
                 body
+                author {
+                  avatarUrl(size: 160)
+                  login
+                  url
+                }
                 comments(last: 100) {
                   nodes {
                     body
