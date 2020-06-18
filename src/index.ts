@@ -4,6 +4,7 @@ import cli from 'cli-ux';
 import { promises as fs } from 'fs';
 import { isString } from 'lodash';
 import filesize from 'filesize';
+import path from 'path';
 
 export interface Repository {
   owner: string;
@@ -22,13 +23,13 @@ export const writeProjectData = async (
 ): Promise<Statistic> => {
   const startTimeMillis = Date.now();
   const headers = {
-    owner: repository.owner,
-    name: repository.name,
+    ...repository,
     headers: {
       authorization: accessToken,
     },
   };
-  const issues = await writeIssues(headers);
+  await createDirectories(repository);
+  const issues = await writeIssues(headers, repository);
   let result: Statistic = {
     issuesCount: issues.issuesCount || 0,
     issuesSizeInBytes: issues.issuesSizeInBytes || 0,
@@ -48,7 +49,8 @@ export const writeProjectData = async (
 };
 
 export const writeIssues = async (
-  headers: RequestParameters
+  headers: RequestParameters,
+  repository: Repository
 ): Promise<Partial<Statistic>> => {
   let hasPreviousPage = true;
   let startCursor = undefined;
@@ -78,7 +80,7 @@ export const writeIssues = async (
       progressBar.start(response.totalCount);
     }
 
-    const sizes = await Promise.all(issues.map(x => writeIssue(x)));
+    const sizes = await Promise.all(issues.map(x => writeIssue(x, repository)));
     issuesSizeInBytes = sizes.reduce((x, y) => x + y, issuesSizeInBytes);
 
     issuesCount += issues.length;
@@ -89,17 +91,37 @@ export const writeIssues = async (
   return { issuesCount, issuesSizeInBytes };
 };
 
+const repositoryDestinationPath = (repository: Repository): string =>
+  path.join('/tmp', repository.owner, repository.name);
+
+const createDirectories = async (repository: Repository) => {
+  const dirName = path.join(repositoryDestinationPath(repository), 'issues');
+  return fs.mkdir(dirName, { recursive: true });
+};
+
 /** @return size of the JSON issue in bytes */
-const writeIssue = async (issue: any): Promise<number> => {
-  if (issue.id) {
+const writeIssue = async (
+  issue: any,
+  repository: Repository
+): Promise<number> => {
+  if (issue.number) {
     const content = JSON.stringify(issue, undefined, 2);
-    const path = '/tmp/' + issue.id + '.json';
-    await fs.writeFile(path, content);
+    const filepath = path.join(
+      repositoryDestinationPath(repository),
+      'issues',
+      issue.number + '.json'
+    );
+    await fs.writeFile(filepath, content);
     return content.length;
   }
   return 0;
 };
 
+/**
+ * Fetch the last 100 issues.
+ * You can paginate through the issues with the `startCursor`.
+ * Pagination for issue comments is not supported now, so you can just fetch the last 100 comments.
+ */
 export const fetchIssues = async (
   headers: RequestParameters,
   startCursor: string | undefined
@@ -121,6 +143,8 @@ export const fetchIssues = async (
               totalCount
               nodes {
                 id
+                number
+                url
                 createdAt
                 updatedAt
                 title
