@@ -44,7 +44,8 @@
     "@types/lodash": "^4.14.155",
     "cli-ux": "^5.4.6",
     "filesize": "^6.1.0",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "sanitize-filename": "^1.6.3"
   },
   "jest": {
     "testEnvironment": "node"

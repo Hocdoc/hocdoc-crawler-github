@@ -2,6 +2,7 @@ import path from 'path';
 import { RequestParameters } from '@octokit/graphql/dist-types/types';
 import { graphql } from '@octokit/graphql';
 import { promises as fs } from 'fs';
+import sanitize from 'sanitize-filename';
 
 export interface Repository {
   owner: string;
@@ -36,7 +37,7 @@ export const writeJsonFile = async (
   const filepath = path.join(
     repositoryDestinationPath(repository),
     baseDirectory,
-    filename
+    sanitize(filename)
   );
   await fs.writeFile(filepath, json);
   return json.length;
