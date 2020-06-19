@@ -1,67 +1,62 @@
 import cli from 'cli-ux';
-import { promises as fs } from 'fs';
 import filesize from 'filesize';
-import path from 'path';
-import { Repository, Statistic } from 'utils';
+import { Repository, ItemsStatistic } from 'utils';
 import { writeIssues } from './crawlerIssues';
-import { writePullrequests } from './crawlerPullrequests';
+import { writePullRequests } from './crawlerPullRequests';
 import { writeReleases } from './crawlerReleases';
 
 export const writeProjectData = async (
   repository: Repository,
   accessToken: string
-): Promise<Statistic> => {
-  const startTimeMillis = Date.now();
+): Promise<any> => {
   const headers = {
     ...repository,
     headers: {
       authorization: accessToken,
     },
   };
-  await createDirectories(repository);
-  const issues = {
-    issuesCount: 0,
-    issuesSizeInBytes: 0,
-    errorMessage: undefined,
-  }; //  await writeIssues(headers, repository);
-  const pullrequests = await writePullrequests(headers, repository);
-  const releases = await writeReleases(headers, repository);
-  let result: Statistic = {
-    issuesCount: issues.issuesCount || 0,
-    issuesSizeInBytes: issues.issuesSizeInBytes || 0,
-    pullrequestsCount: pullrequests.pullrequestsCount || 0,
-    pullrequestsSizeInBytes: pullrequests.pullrequestsSizeInBytes || 0,
-    releasesCount: releases.releasesCount || 0,
-    releasesSizeInBytes: releases.releasesSizeInBytes || 0,
-    errorMessage: issues.errorMessage || pullrequests.errorMessage,
-  };
 
-  const lastTime = Date.now() - startTimeMillis;
-  if (result.errorMessage) {
-    console.error(result.errorMessage);
-  } else {
-    console.log(
-      `Fetched ${result.issuesCount} issues (${filesize(
-        result.issuesSizeInBytes
-      )}), ${result.pullrequestsCount} pullrequests (${filesize(
-        result.pullrequestsSizeInBytes
-      )}) and ${result.releasesCount} releases (${filesize(
-        result.releasesSizeInBytes
-      )}) in ${Math.round(lastTime / 1000)}s from https://github.com/${
-        repository.owner
-      }/${repository.name}`
-    );
-  }
+  console.log(
+    `Start fetching data from https://github.com/${repository.owner}/${repository.name}`
+  );
+  const tasks = [writeIssues, writePullRequests, writeReleases];
+  const results = await Promise.all(tasks.map(x => x(headers, repository)));
 
-  return result;
+  printFirstError(results);
+  printResultTable(results);
+
+  /* TODO: 
+  - commitComments
+  - milestones
+  - projects?!
+
+  Solange fetchen bis man auf das letzte Update-Datum kommt oder nix mehr da ist
+  */
 };
 
-const repositoryDestinationPath = (repository: Repository): string =>
-  path.join('/tmp', repository.owner, repository.name);
+const printFirstError = (results: ItemsStatistic[]): void => {
+  const taskWithError = results.find(x => x.errorMessage);
+  if (taskWithError) {
+    console.error(
+      `Error while fetching ${taskWithError.name}: ${taskWithError.errorMessage}`
+    );
+  }
+};
 
-const createDirectories = async (repository: Repository) => {
-  const destination = repositoryDestinationPath(repository);
-  await fs.mkdir(path.join(destination, 'issues'), { recursive: true });
-  await fs.mkdir(path.join(destination, 'pullrequests'), { recursive: true });
-  await fs.mkdir(path.join(destination, 'releases'), { recursive: true });
+const printResultTable = (results: ItemsStatistic[]): void => {
+  cli.table(
+    results,
+    {
+      name: { header: 'Task' },
+      count: { header: 'Count' },
+      sizeInBytes: { header: 'Size', get: row => filesize(row.sizeInBytes) },
+      lastTimeInMilliseconds: {
+        header: 'Time',
+        get: row => Math.round(row.lastTimeInMilliseconds / 1000) + 's',
+      },
+    },
+    {
+      printLine: console.log,
+    }
+  );
 };

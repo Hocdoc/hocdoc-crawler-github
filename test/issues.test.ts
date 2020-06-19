@@ -12,6 +12,7 @@ describe('fetchIssues', () => {
       const repository: Repository = {
         owner: 'mui-org',
         name: 'material-ui-pickers',
+        lastUpdatedAt: '1990-01-01',
       };
       const accessToken = (
         await fs.readFile(homedir + '/githubToken.txt', 'utf8')

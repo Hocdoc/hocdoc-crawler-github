@@ -1,31 +1,23 @@
 import { RequestParameters } from '@octokit/graphql/dist-types/types';
 import { Repository, writeItems, ItemsStatistic } from './utils';
 
-export const writeIssues = async (
+export const writePullRequests = async (
   headers: RequestParameters,
   repository: Repository
 ): Promise<ItemsStatistic> => {
   const query = `
-  query lastIssues(
-    $owner: String!
-    $name: String!
-    $startCursor: String
-  ) {
+  query pullRequests($owner: String!, $name: String!, $startCursor: String) {
     repository(owner: $owner, name: $name) {
-      issues(
-        last: 100
-        orderBy: { field: UPDATED_AT, direction: DESC }
-        before: $startCursor
-      ) {
+      pullRequests(last: 100, orderBy: {field: UPDATED_AT, direction: DESC}, before: $startCursor) {
         totalCount
         nodes {
           id
           number
+          additions
+          body
           url
-          createdAt
           updatedAt
           title
-          body
           author {
             avatarUrl(size: 160)
             login
@@ -51,10 +43,10 @@ export const writeIssues = async (
       }
     }
   }
-`;
+  `;
 
   return writeItems(
-    'issues',
+    'pullRequests',
     x => x.number + '.json',
     query,
     headers,
