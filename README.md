@@ -4,8 +4,10 @@ A Typescript library to fetch data from GitHub projects and write them to JSON f
 
 The crawler fetches all data of these types:
 
-* Issues
-* Pull Requests
+- Issues
+- Pull Requests
+- Releases
+- Milestones
 
 After the first call, only the new data is fetched in the next calls.
 Unfortunately it needs an API key, even if you just crawl public GitHub repositories.

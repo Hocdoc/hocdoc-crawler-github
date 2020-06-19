@@ -4,6 +4,7 @@ import { Repository, ItemsStatistic } from 'utils';
 import { writeIssues } from './crawlerIssues';
 import { writePullRequests } from './crawlerPullRequests';
 import { writeReleases } from './crawlerReleases';
+import { writeMilestones } from './crawlerMilestones';
 
 export const writeProjectData = async (
   repository: Repository,
@@ -19,19 +20,16 @@ export const writeProjectData = async (
   console.log(
     `Start fetching data from https://github.com/${repository.owner}/${repository.name}`
   );
-  const tasks = [writeIssues, writePullRequests, writeReleases];
+  const tasks = [
+    writeIssues,
+    writePullRequests,
+    writeReleases,
+    writeMilestones,
+  ];
   const results = await Promise.all(tasks.map(x => x(headers, repository)));
 
   printFirstError(results);
   printResultTable(results);
-
-  /* TODO: 
-  - commitComments
-  - milestones
-  - projects?!
-
-  Solange fetchen bis man auf das letzte Update-Datum kommt oder nix mehr da ist
-  */
 };
 
 const printFirstError = (results: ItemsStatistic[]): void => {
