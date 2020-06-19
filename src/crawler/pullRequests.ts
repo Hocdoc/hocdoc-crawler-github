@@ -1,5 +1,5 @@
 import { RequestParameters } from '@octokit/graphql/dist-types/types';
-import { Repository, writeItems, ItemsStatistic } from './utils';
+import { Repository, writeItems, ItemsStatistic } from '../utils';
 
 export const writePullRequests = async (
   headers: RequestParameters,

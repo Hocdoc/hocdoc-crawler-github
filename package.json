@@ -42,10 +42,12 @@
     "@octokit/auth-token": "^2.4.2",
     "@octokit/graphql": "^4.5.1",
     "@types/lodash": "^4.14.155",
+    "@types/yargs": "^15.0.5",
     "cli-ux": "^5.4.6",
     "filesize": "^6.1.0",
     "lodash": "^4.17.15",
-    "sanitize-filename": "^1.6.3"
+    "sanitize-filename": "^1.6.3",
+    "yargs": "^15.3.1"
   },
   "jest": {
     "testEnvironment": "node"

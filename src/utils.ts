@@ -20,6 +20,12 @@ export interface ItemsStatistic {
   lastTimeInMilliseconds: number;
 }
 
+export interface Statistic {
+  issues: ItemsStatistic;
+  pullrequests: ItemsStatistic;
+  releases: ItemsStatistic;
+}
+
 const repositoryDestinationPath = (repository: Repository): string =>
   path.join('/tmp', repository.owner, repository.name);
 
@@ -77,7 +83,7 @@ export const writeItems = async (
   const startTimeMillis = Date.now();
 
   const progressBar = cli.progress({
-    format: `Fetching ${name} | {bar} | {value}/{total}`,
+    format: `Fetching ${name.padEnd(15, ' ')} | {bar} | {value}/{total}`,
   });
 
   createDirectories(name, repository);
