@@ -28,4 +28,8 @@ yargs
       const repository = urlToRepository(argv.url as string);
       crawlProjectData(repository, argv.accessToken as string);
     }
+  )
+  .example(
+    'crawl',
+    '"https://github.com/mui-org/material-ui-pickers" "token 8284PersonalTokenFromGitHubf8657bb96157db"'
   ).argv;

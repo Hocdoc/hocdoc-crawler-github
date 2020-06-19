@@ -83,7 +83,7 @@ export const writeItems = async (
   const startTimeMillis = Date.now();
 
   const progressBar = cli.progress({
-    format: `Fetching ${name.padEnd(15, ' ')} | {bar} | {value}/{total}`,
+    format: `Fetching ${name.padEnd(12, ' ')} | {bar} | {value}/{total}`,
   });
 
   createDirectories(name, repository);
