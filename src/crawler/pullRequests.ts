@@ -8,7 +8,7 @@ export const writePullRequests = async (
   const query = `
   query pullRequests($owner: String!, $name: String!, $startCursor: String) {
     repository(owner: $owner, name: $name) {
-      pullRequests(last: 100, orderBy: {field: UPDATED_AT, direction: DESC}, before: $startCursor) {
+      pullRequests(last: 100, orderBy: {field: UPDATED_AT, direction: ASC}, before: $startCursor) {
         totalCount
         nodes {
           id
@@ -49,6 +49,7 @@ export const writePullRequests = async (
     'pullRequests',
     x => x.number + '.json',
     query,
+    'updatedAt',
     headers,
     repository
   );

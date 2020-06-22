@@ -26,6 +26,9 @@ export interface Statistic {
   releases: ItemsStatistic;
 }
 
+/** Minimal date, to fetch all entries since beginning */
+export const START_DATE = '1000-04-27T01:02:03Z';
+
 const repositoryDestinationPath = (repository: Repository): string =>
   path.join('/tmp', repository.owner, repository.name);
 
@@ -73,14 +76,16 @@ export const writeItems = async (
   name: string,
   itemToFilename: (item: any) => string,
   query: string,
+  updatedAtFieldname: string,
   headers: RequestParameters,
   repository: Repository
 ): Promise<ItemsStatistic> => {
-  let hasPreviousPage = true;
-  let startCursor = undefined;
+  let continueCrawling = true;
+  let startCursor = null;
   let count = 0;
   let sizeInBytes = 0;
   const startTimeMillis = Date.now();
+  let totalCount = 0;
 
   const progressBar = cli.progress({
     format: `Fetching ${name.padEnd(12, ' ')} | {bar} | {value}/{total}`,
@@ -88,7 +93,7 @@ export const writeItems = async (
 
   createDirectories(name, repository);
 
-  while (hasPreviousPage) {
+  while (continueCrawling) {
     const response: any = await fetchFromGithub(query, headers, startCursor);
     if (isString(response)) {
       progressBar.stop();
@@ -104,23 +109,35 @@ export const writeItems = async (
 
     const itemsResponse = response.repository[name];
     const items = (itemsResponse?.nodes as any[]) || [];
-    hasPreviousPage = itemsResponse?.pageInfo?.hasPreviousPage;
-    startCursor = itemsResponse?.pageInfo?.startCursor;
 
     if (count === 0) {
+      totalCount = itemsResponse.totalCount;
       progressBar.start(itemsResponse.totalCount);
     }
 
+    const newItems = items.filter(x =>
+      isNewItem(x[updatedAtFieldname], repository.lastUpdatedAt)
+    );
+    continueCrawling =
+      newItems.length === items.length &&
+      itemsResponse?.pageInfo?.hasPreviousPage;
+    startCursor = itemsResponse?.pageInfo?.startCursor;
+
     const sizes = await Promise.all(
-      items.map(x => writeJsonFile(name, itemToFilename(x), x, repository))
+      newItems.map(x => writeJsonFile(name, itemToFilename(x), x, repository))
     );
     sizeInBytes = sizes.reduce((x, y) => x + y, sizeInBytes);
 
-    count += items.length;
+    count += newItems.length;
     progressBar.increment(items.length);
   }
 
+  // To avoid confusing the user, the progress bar is set to the maximum value at the end
+  progressBar.update(totalCount);
   progressBar.stop();
   const lastTimeInMilliseconds = Date.now() - startTimeMillis;
   return { name, count, sizeInBytes, lastTimeInMilliseconds };
 };
+
+const isNewItem = (itemUpdatedAt: string, lastUpdatedAt: string): boolean =>
+  new Date(itemUpdatedAt) >= new Date(lastUpdatedAt);

@@ -8,7 +8,7 @@ export const writeReleases = async (
   const query = `
   query releases($owner: String!, $name: String!, $startCursor: String) {
     repository(owner: $owner, name: $name) {
-      releases(last: 100, orderBy: {field: CREATED_AT, direction: DESC}, before: $startCursor) {
+      releases(last: 100, orderBy: {field: CREATED_AT, direction: ASC}, before: $startCursor) {
         totalCount
         nodes {
           id
@@ -37,6 +37,7 @@ export const writeReleases = async (
     'releases',
     x => x.tagName + '.json',
     query,
+    'createdAt',
     headers,
     repository
   );

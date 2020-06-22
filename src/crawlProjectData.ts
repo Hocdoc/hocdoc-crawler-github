@@ -1,6 +1,6 @@
 import cli from 'cli-ux';
 import filesize from 'filesize';
-import { Repository, ItemsStatistic } from 'utils';
+import { Repository, ItemsStatistic, START_DATE } from './utils';
 import { writeIssues } from './crawler/issues';
 import { writePullRequests } from './crawler/pullRequests';
 import { writeReleases } from './crawler/releases';
@@ -37,7 +37,7 @@ export const crawlProjectData = async (
   }
 
   printFirstError(results);
-  printResultTable(results);
+  printResultTable(repository, results);
 };
 
 const printFirstError = (results: ItemsStatistic[]): void => {
@@ -49,8 +49,18 @@ const printFirstError = (results: ItemsStatistic[]): void => {
   }
 };
 
-const printResultTable = (results: ItemsStatistic[]): void => {
-  console.log('\nFetching finished:');
+const printResultTable = (
+  repository: Repository,
+  results: ItemsStatistic[]
+): void => {
+  console.log(
+    `\nFetching new items since ${
+      repository.lastUpdatedAt === START_DATE
+        ? 'beginning'
+        : repository.lastUpdatedAt
+    } finished:`
+  );
+
   cli.table(
     results,
     {

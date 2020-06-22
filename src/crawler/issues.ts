@@ -14,7 +14,7 @@ export const writeIssues = async (
     repository(owner: $owner, name: $name) {
       issues(
         last: 100
-        orderBy: { field: UPDATED_AT, direction: DESC }
+        orderBy: { field: UPDATED_AT, direction: ASC }
         before: $startCursor
       ) {
         totalCount
@@ -57,6 +57,7 @@ export const writeIssues = async (
     'issues',
     x => x.number + '.json',
     query,
+    'updatedAt',
     headers,
     repository
   );

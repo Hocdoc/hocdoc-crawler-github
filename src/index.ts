@@ -2,7 +2,7 @@
 
 import { crawlProjectData } from './crawlProjectData';
 import yargs from 'yargs';
-import { Repository } from './utils';
+import { Repository, START_DATE } from './utils';
 
 const urlToRepository = (url: string): Repository => {
   const withoutPrefix = url.replace(/^(https?:\/\/)?github.com/, '');
@@ -15,7 +15,12 @@ const urlToRepository = (url: string): Repository => {
     process.exit(1);
   }
 
-  return { owner: tokens[0], name: tokens[1], lastUpdatedAt: 'TODO' };
+  return {
+    owner: tokens[0],
+    name: tokens[1],
+    // lastUpdatedAt: '2020-06-20T23:29:56Z',
+    lastUpdatedAt: START_DATE,
+  };
 };
 
 yargs

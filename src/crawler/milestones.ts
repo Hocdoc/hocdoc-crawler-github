@@ -8,7 +8,7 @@ export const writeMilestones = async (
   const query = `
   query milestones($owner: String!, $name: String!, $startCursor: String) {
     repository(owner: $owner, name: $name) {
-      milestones(last: 100, orderBy: {field: CREATED_AT, direction: DESC}, before: $startCursor) {
+      milestones(last: 100, orderBy: {field: CREATED_AT, direction: ASC}, before: $startCursor) {
         totalCount
         nodes {
           createdAt
@@ -42,6 +42,7 @@ export const writeMilestones = async (
     'milestones',
     x => x.number + '.json',
     query,
+    'createdAt',
     headers,
     repository
   );
