@@ -29,7 +29,7 @@ export interface Statistic {
 /** Minimal date, to fetch all entries since beginning */
 export const START_DATE = '1000-04-27T01:02:03Z';
 
-const repositoryDestinationPath = (repository: Repository): string =>
+export const repositoryDestinationPath = (repository: Repository): string =>
   path.join('/tmp', repository.owner, repository.name);
 
 export const graphqlErrorToMessage = (error: any): string => {
