@@ -37,4 +37,5 @@ yargs
   .example(
     'crawl',
     '"https://github.com/mui-org/material-ui-pickers" "token 8284PersonalTokenFromGitHubf8657bb96157db"'
-  ).argv;
+  )
+  .parse();
