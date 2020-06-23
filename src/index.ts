@@ -3,6 +3,18 @@
 import { crawlProjectData, crawlProjectDataFromUrl } from './crawlProjectData';
 import yargs from 'yargs';
 import { START_DATE } from './utils';
+import cliProgress from 'cli-progress';
+
+const multibar = new cliProgress.MultiBar(
+  {
+    clearOnComplete: true,
+    stopOnComplete: true,
+    hideCursor: true,
+    format:
+      '[{bar}] {percentage}% | {value}/{total} | {category} | {task} | {location}',
+  },
+  cliProgress.Presets.shades_grey
+);
 
 yargs
   .usage('Usage: $0 <command> [options]')
@@ -14,8 +26,10 @@ yargs
       crawlProjectDataFromUrl(
         argv.url as string,
         START_DATE,
-        argv.accessToken as string
+        argv.accessToken as string,
+        multibar
       );
+      multibar.stop();
     }
   )
   .example(

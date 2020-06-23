@@ -5,11 +5,13 @@ import { promises as fs } from 'fs';
 import sanitize from 'sanitize-filename';
 import cli from 'cli-ux';
 import { isString } from 'lodash';
+import cliProgress from 'cli-progress';
 
 export interface Repository {
   owner: string;
   name: string;
   lastUpdatedAt: string;
+  multibar: cliProgress.MultiBar;
 }
 
 export interface ItemsStatistic {
@@ -87,16 +89,14 @@ export const writeItems = async (
   const startTimeMillis = Date.now();
   let totalCount = 0;
 
-  const progressBar = cli.progress({
-    format: `Fetching ${name.padEnd(12, ' ')} | {bar} | {value}/{total}`,
-  });
+  let progressBar: cliProgress.SingleBar | null = null;
 
   createDirectories(name, repository);
 
   while (continueCrawling) {
     const response: any = await fetchFromGithub(query, headers, startCursor);
     if (isString(response)) {
-      progressBar.stop();
+      progressBar?.stop();
       const lastTimeInMilliseconds = Date.now() - startTimeMillis;
       return {
         name,
@@ -112,7 +112,16 @@ export const writeItems = async (
 
     if (count === 0) {
       totalCount = itemsResponse.totalCount;
-      progressBar.start(itemsResponse.totalCount);
+
+      progressBar = repository.multibar.create(
+        itemsResponse.totalCount,
+        items.length,
+        {
+          category: 'GitHub',
+          task: name,
+          location: `https://github.com/${repository.owner}/${repository.name}`,
+        }
+      );
     }
 
     const newItems = items.filter(x =>
@@ -129,12 +138,12 @@ export const writeItems = async (
     sizeInBytes = sizes.reduce((x, y) => x + y, sizeInBytes);
 
     count += newItems.length;
-    progressBar.increment(items.length);
+    progressBar?.increment(items.length);
   }
 
   // To avoid confusing the user, the progress bar is set to the maximum value at the end
-  progressBar.update(totalCount);
-  progressBar.stop();
+  progressBar?.update(totalCount);
+  progressBar?.stop();
   const lastTimeInMilliseconds = Date.now() - startTimeMillis;
   return { name, count, sizeInBytes, lastTimeInMilliseconds };
 };

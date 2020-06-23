@@ -10,6 +10,7 @@ import { writeIssues } from './crawler/issues';
 import { writePullRequests } from './crawler/pullRequests';
 import { writeReleases } from './crawler/releases';
 import { writeMilestones } from './crawler/milestones';
+import cliProgress from 'cli-progress';
 
 export interface CrawlResult {
   baseDirectory: string;
@@ -19,7 +20,8 @@ export interface CrawlResult {
 export const crawlProjectDataFromUrl = async (
   url: string,
   lastUpdatedAt: string,
-  accessToken: string
+  accessToken: string,
+  multibar: cliProgress.MultiBar
 ): Promise<CrawlResult> => {
   const withoutPrefix = url.replace(/^(https?:\/\/)?github.com/, '');
   const tokens = withoutPrefix.split('/').filter(x => x.length > 0);
@@ -35,6 +37,7 @@ export const crawlProjectDataFromUrl = async (
     owner: tokens[0],
     name: tokens[1],
     lastUpdatedAt,
+    multibar,
   };
 
   return crawlProjectData(repository, accessToken);
@@ -45,15 +48,14 @@ export const crawlProjectData = async (
   accessToken: string
 ): Promise<CrawlResult> => {
   const headers = {
-    ...repository,
+    owner: repository.owner,
+    name: repository.name,
+    lastUpdatedAt: repository.lastUpdatedAt,
     headers: {
       authorization: accessToken,
     },
   };
 
-  console.log(
-    `Start fetching data from https://github.com/${repository.owner}/${repository.name} ...`
-  );
   const tasks = [
     writeIssues,
     writePullRequests,
@@ -61,14 +63,7 @@ export const crawlProjectData = async (
     writeMilestones,
   ];
 
-  // Calling the tasks parallel with Promise.all isn't faster as GitHub seems to block
-  // concurrent calls.
-  // So the tasks are run sequentially and we can show the user a progress bar :-).
-  let results: ItemsStatistic[] = [];
-  for (let i = 0; i < tasks.length; i++) {
-    const result = await tasks[i](headers, repository);
-    results.push(result);
-  }
+  const results = await Promise.all(tasks.map(x => x(headers, repository)));
 
   const error = printFirstError(results);
   printResultTable(repository, results);
