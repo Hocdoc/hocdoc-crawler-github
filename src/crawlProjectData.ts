@@ -10,7 +10,7 @@ import { writeIssues } from './crawler/issues';
 import { writePullRequests } from './crawler/pullRequests';
 import { writeReleases } from './crawler/releases';
 import { writeMilestones } from './crawler/milestones';
-import cliProgress from 'cli-progress';
+import * as cliProgress from 'cli-progress';
 
 export interface CrawlResult {
   baseDirectory: string;
@@ -21,7 +21,7 @@ export const crawlProjectDataFromUrl = async (
   url: string,
   lastUpdatedAt: string,
   accessToken: string,
-  multibar: cliProgress.MultiBar
+  multibar: cliProgress.MultiBar | undefined
 ): Promise<CrawlResult> => {
   const withoutPrefix = url.replace(/^(https?:\/\/)?github.com/, '');
   const tokens = withoutPrefix.split('/').filter(x => x.length > 0);

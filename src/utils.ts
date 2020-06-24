@@ -3,15 +3,14 @@ import { RequestParameters } from '@octokit/graphql/dist-types/types';
 import { graphql } from '@octokit/graphql';
 import { promises as fs } from 'fs';
 import sanitize from 'sanitize-filename';
-import cli from 'cli-ux';
 import { isString } from 'lodash';
-import cliProgress from 'cli-progress';
+import * as cliProgress from 'cli-progress';
 
 export interface Repository {
   owner: string;
   name: string;
   lastUpdatedAt: string;
-  multibar: cliProgress.MultiBar;
+  multibar?: cliProgress.MultiBar;
 }
 
 export interface ItemsStatistic {
@@ -89,7 +88,7 @@ export const writeItems = async (
   const startTimeMillis = Date.now();
   let totalCount = 0;
 
-  let progressBar: cliProgress.SingleBar | null = null;
+  let progressBar: cliProgress.SingleBar | undefined = undefined;
 
   createDirectories(name, repository);
 
@@ -113,7 +112,7 @@ export const writeItems = async (
     if (count === 0) {
       totalCount = itemsResponse.totalCount;
 
-      progressBar = repository.multibar.create(
+      progressBar = repository.multibar?.create(
         itemsResponse.totalCount,
         items.length,
         {
