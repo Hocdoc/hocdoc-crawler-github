@@ -36,6 +36,11 @@ export const writeIssues = async (
               body
               createdAt
               url
+              author {
+                avatarUrl(size: 160)
+                login
+                url
+              }
             }
           }
           labels(last: 100) {
