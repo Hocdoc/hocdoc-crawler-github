@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 
-import { crawlProjectData, crawlProjectDataFromUrl } from './crawlProjectData';
+import {
+  crawlProjectData,
+  crawlProjectDataFromUrl,
+  ownerNameFromUrl,
+  CrawlResult,
+  OwnerName,
+} from './crawlProjectData';
 import yargs from 'yargs';
 import { START_DATE } from './utils';
 import cliProgress from 'cli-progress';
@@ -38,4 +44,10 @@ yargs
   )
   .parse();
 
-export { crawlProjectData, crawlProjectDataFromUrl };
+export {
+  crawlProjectData,
+  crawlProjectDataFromUrl,
+  ownerNameFromUrl,
+  CrawlResult,
+  OwnerName,
+};

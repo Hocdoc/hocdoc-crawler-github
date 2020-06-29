@@ -17,16 +17,19 @@ export interface CrawlResult {
   error?: string;
 }
 
+export interface OwnerName {
+  owner: string;
+  name: string;
+}
+
 export const crawlProjectDataFromUrl = async (
   url: string,
   lastUpdatedAt: string,
   accessToken: string,
   multibar: cliProgress.MultiBar | undefined
 ): Promise<CrawlResult> => {
-  const withoutPrefix = url.replace(/^(https?:\/\/)?github.com/, '');
-  const tokens = withoutPrefix.split('/').filter(x => x.length > 0);
-  if (tokens.length !== 2) {
-    console.log(JSON.stringify(tokens));
+  const ownerName = ownerNameFromUrl(url);
+  if (!ownerName) {
     console.error(
       `Cannot parse the given GitHub project URL "${url}"\nExample for a valid GitHub project URL: https://github.com/mui-org/material-ui`
     );
@@ -34,13 +37,23 @@ export const crawlProjectDataFromUrl = async (
   }
 
   const repository = {
-    owner: tokens[0],
-    name: tokens[1],
+    ...ownerName,
     lastUpdatedAt,
     multibar,
   };
 
   return crawlProjectData(repository, accessToken);
+};
+
+/** @return [owner, name] from URL */
+export const ownerNameFromUrl = (
+  repositoryUrl: string
+): OwnerName | undefined => {
+  const withoutPrefix = repositoryUrl.replace(/^(https?:\/\/)?github.com/, '');
+  const tokens = withoutPrefix.split('/').filter(x => x.length > 0);
+  return tokens.length === 2
+    ? { owner: tokens[0], name: tokens[1] }
+    : undefined;
 };
 
 export const crawlProjectData = async (
