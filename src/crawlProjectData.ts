@@ -1,11 +1,6 @@
 import cli from 'cli-ux';
 import filesize from 'filesize';
-import {
-  Repository,
-  ItemsStatistic,
-  START_DATE,
-  repositoryDestinationPath,
-} from './utils';
+import { Repository, ItemsStatistic, START_DATE } from './utils';
 import { writeIssues } from './crawler/issues';
 import { writePullRequests } from './crawler/pullRequests';
 import { writeReleases } from './crawler/releases';
@@ -13,7 +8,6 @@ import { writeMilestones } from './crawler/milestones';
 import * as cliProgress from 'cli-progress';
 
 export interface CrawlResult {
-  baseDirectory: string;
   error?: string;
 }
 
@@ -23,6 +17,7 @@ export interface OwnerName {
 }
 
 export const crawlProjectDataFromUrl = async (
+  baseDir: string,
   url: string,
   lastUpdatedAt: string,
   accessToken: string,
@@ -37,6 +32,7 @@ export const crawlProjectDataFromUrl = async (
   }
 
   const repository = {
+    baseDir,
     ...ownerName,
     lastUpdatedAt,
     multibar,
@@ -81,8 +77,7 @@ export const crawlProjectData = async (
   const error = printFirstError(results);
   printResultTable(repository, results);
 
-  const baseDirectory = repositoryDestinationPath(repository);
-  return { baseDirectory, error };
+  return { error };
 };
 
 const printFirstError = (results: ItemsStatistic[]): string | undefined => {

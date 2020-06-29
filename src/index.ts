@@ -30,6 +30,7 @@ yargs
     {},
     argv => {
       crawlProjectDataFromUrl(
+        '/tmp',
         argv.url as string,
         START_DATE,
         argv.accessToken as string,

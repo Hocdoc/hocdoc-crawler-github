@@ -7,6 +7,7 @@ import { isString } from 'lodash';
 import * as cliProgress from 'cli-progress';
 
 export interface Repository {
+  baseDir: string;
   owner: string;
   name: string;
   lastUpdatedAt: string;
@@ -31,7 +32,7 @@ export interface Statistic {
 export const START_DATE = '1000-04-27T01:02:03Z';
 
 export const repositoryDestinationPath = (repository: Repository): string =>
-  path.join('/tmp', repository.owner, repository.name);
+  path.join(repository.baseDir, repository.owner, repository.name);
 
 export const graphqlErrorToMessage = (error: any): string => {
   return error.toString();
