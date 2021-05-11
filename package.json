@@ -47,7 +47,7 @@
     "cli-progress": "^3.8.2",
     "cli-ux": "^5.4.6",
     "filesize": "^6.1.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "sanitize-filename": "^1.6.3",
     "yargs": "^15.3.1"
   },
